@@ -6,31 +6,33 @@ from bs4 import BeautifulSoup
 class MotorbikeScraper():
 
     def __init__(self):
-        self.url = "http://valtermotorstore.com"
+        self.url = "https://valtermotostore.com"
         self.subdomain = "/catalog/seo_sitemap/category/"
         self.data = []
 
     def __download_html(self, url):
-        http = urllib3.PoolManager()
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        http = urllib3.PoolManager(maxsize=10)
         response = http.request('GET', url)
-        soup = BeautifulSoup(response.data)
+        soup = BeautifulSoup(response.data, "html.parser")
         return soup
 
     def scrape(self):
-        print
-        "Web Scraping of travels' crashes data from " + "'" + self.url + "'..."
+        print("Web Scraping of travels' crashes data from ", "'", self.url, "'...\n")
 
-        print
-        "This process could take roughly 45 minutes.\n"
+        print("This process could take roughly 45 minutes.\n")
 
         # Start timer
         start_time = time.time()
+        print("Starting process at ", time.ctime(start_time), "...\n")
 
         # Download HTML
+        print("Downloading HTML...\n")
         html = self.__download_html(self.url + self.subdomain)
-        print
-        "Downloading HTML..."
-        bs = BeautifulSoup(html, 'html.parser')
+
+        for ul in html.findAll("ul", class_="sitemap"):
+            for a in ul.findAll("a", href=True):
+                print(a.text)
 
     def data2csv(self, filename):
         # Overwrite to the specified file.

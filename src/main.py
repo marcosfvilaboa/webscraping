@@ -1,7 +1,7 @@
-from scraper import TravelScraper
+from scraper import MotorbikeScraper
 
 output_file = "dataset.csv"
 
-scraper = MotorbikeScraper();
-scraper.scrape();
-scraper.data2csv(output_file);
+scraper = MotorbikeScraper()
+scraper.scrape()
+# scraper.data2csv(output_file)
