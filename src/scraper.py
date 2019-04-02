@@ -4,88 +4,107 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 
-class MotorbikeScraper():
+class MotorbikeScraper:
 
     def __init__(self):
+        """
+        Constructor of the class
+        """
         self.url = "https://valtermotostore.com"
         self.subdomain = "/catalog/seo_sitemap/category/?p=1"
         self.data = []
 
-    def __download_html(self, url):
+    @staticmethod
+    def __download_html(url):
+        """
+        Method to create a BeautifulSoup object from given url
+
+        :param url: url origin address
+        :return: soup
+        """
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         http = urllib3.PoolManager(maxsize=10)
         response = http.request('GET', url)
         soup = BeautifulSoup(response.data, "html.parser")
         return soup
 
-    def scrapeCategories(self):
-        print("Web Scraping of travels' crashes data from ", "'", self.url, "'...\n")
+    def scrape_categories(self):
+        """
+        Method to scrap the categories of the fixed url from constructor.
+        It constructs a new dataframe named categories_df
 
-        print("This process could take roughly 45 minutes.\n")
-
-        # Start timer
-        start_time = time.time()
-        print("Starting process at ", time.ctime(start_time), "...\n")
-
-        # Download HTML
-        print("Downloading HTML...\n")
-
+        :return: categories_df
+        """
         html = self.__download_html(self.url + self.subdomain)
         categories = []
-        nextPage = True
-        while(nextPage == True):
+        next_page = True
+        while next_page:
             for ul in html.findAll("ul", class_="sitemap"):
                 for c in ul.findAll("li", class_="level-1"):
-                    categoryObject = c.find("a")
-                    categoryMotorbike = c.find_previous_sibling("li", class_="level-0").text
-                    categoryName = categoryObject.text
-                    categoryLink = categoryObject['href']
-                    categories.append((categoryMotorbike, categoryName, categoryLink))
-
-            nextPageObject = html.find("a", class_="next i-next")
-            if(nextPageObject is not None):
-                html = self.__download_html(nextPageObject['href'])
-                print(nextPageObject['href'])
+                    category_object = c.find("a")
+                    category_motorbike = c.find_previous_sibling("li", class_="level-0").text
+                    category_name = category_object.text
+                    category_link = category_object['href']
+                    categories.append((category_motorbike, category_name, category_link))
+            next_page_object = html.find("a", class_="next i-next")
+            if next_page_object is not None:
+                html = self.__download_html(next_page_object['href'])
             else:
-                nextPage = False
-
-        categories_df = pd.DataFrame(categories, columns=["categoryMotorbike", "categoryName", "categoryLink"])
+                next_page = False
+        categories_df = pd.DataFrame(categories, columns=["category_motorbike", "category_name", "category_link"])
         return categories_df
 
-    def scrapeProducts(self):
+    def scrape_products(self):
+        """
+        Method to scrap all the urls of the categories (call to scrape_products function) and
+        every page of every category.
+        It constructs a dataframe to the field self.data
+        """
+        print("\nWeb Scraping of High-Tech Parts for Race Bikes data from ", "'", self.url, "'...\n")
+        # Start timer
+        start_time = time.time()
+        print("Starting process at ", time.ctime(start_time))
 
-        categories = self.scrapeCategories()
+        # Download categories
+        print("\nDownloading categories...")
+        categories = self.scrape_categories()
 
+        print("\n", categories.__len__(), " categories saved!\n")
+        print("\n Downloading HTML of every category")
+        print("This process could take roughly 45 minutes...")
         products = []
-
+        # Scrap url of every category
         for index, c in categories.iterrows():
-
-            categoryMotorbike = c['categoryMotorbike']
-            categoryName = c['categoryName']
-            url = c['categoryLink']
+            category_motorbike = c['category_motorbike']
+            category_name = c['category_name']
+            url = c['category_link']
             html = self.__download_html(url)
-            productList = html.find("ol", class_="products-list")
-            if(productList is not None):
-                for p in productList.findAll("li" , class_="item", recursive=False):
-                    productTitle = p.find(class_="product-name").text
-                    productSKU = p.find(id="sku").text
-                    productDescription = p.find(class_="desc").text
-                    productImage = p.find("img")['src']
+            product_list = html.find("ol", class_="products-list")
+            if product_list is not None:
+                for p in product_list.findAll("li", class_="item", recursive=False):
+                    product_title = p.find(class_="product-name").text
+                    product_sku = p.find(id="sku").text
+                    product_description = p.find(class_="desc").text
+                    product_image = p.find("img")['src']
+                    products.append((category_motorbike, category_name, product_sku, product_title, product_description,
+                                     product_image))
 
-                    products.append((categoryMotorbike,categoryName,productSKU, productTitle, productDescription, productImage))
+        print("\nHTML downloading finished!\n")
+        self.data = pd.DataFrame(products, columns=["category_motorbike", "category_name", "product_sku",
+                                                    "product_title", "product_description", "product_image"])
 
-        products_df = pd.DataFrame(products, columns=["categoryMotorbike","categoryName","productSKU", "productTitle", "productDescription", "productImage"])
-        return products_df
-
+        # Stop timer
+        stop_time = time.time()
+        print("Process stopped at ", time.ctime(stop_time))
+        total_time = stop_time - start_time
+        print("Lasted ", int(total_time/3600), "h", int(total_time/60), "m")
+        print(self.data)
 
     def data2csv(self, filename):
-        # Overwrite to the specified file.
-        # Create it if it does not exist.
-        file = open("../csv/" + filename, "w+")
-
-        # Dump all the data with CSV format
-        for i in range(len(self.data)):
-            for j in range(len(self.data[i])):
-                file.write(self.data[i][j] + ";");
-            file.write("\n");
-
+        """
+        Method to create a CSV file from dataframe in field self.data
+        It constructs a file in a csv folder with pandas
+        :param filename: name of the file to write in
+        """
+        root = '../csv'
+        self.data.to_csv(root + '/' + filename, index_label='row')
