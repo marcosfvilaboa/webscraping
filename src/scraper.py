@@ -60,18 +60,18 @@ class MotorbikeScraper:
         every page of every category.
         It constructs a dataframe to the field self.data
         """
-        print("\nWeb Scraping of High-Tech Parts for Race Bikes data from ", "'", self.url, "'...\n")
+        print("\nWeb Scraping of High-Tech Parts for Race Bikes data from ", "'", self.url, "'...")
         # Start timer
         start_time = time.time()
         print("Starting process at ", time.ctime(start_time))
 
         # Download categories
-        print("\nDownloading categories...")
+        print("Downloading categories...")
         categories = self.scrape_categories()
 
-        print("\n", categories.__len__(), " categories saved!\n")
-        print("\n Downloading HTML of every category")
-        print("This process could take roughly 45 minutes...")
+        print(categories.__len__(), " categories saved!")
+        print("Downloading HTML of every category")
+        print("This process could take 1 hour...")
         products = []
         # Scrap url of every category
         for index, c in categories.iterrows():
@@ -89,7 +89,7 @@ class MotorbikeScraper:
                     products.append((category_motorbike, category_name, product_sku, product_title, product_description,
                                      product_image))
 
-        print("\nHTML downloading finished!\n")
+        print("HTML downloading finished!")
         self.data = pd.DataFrame(products, columns=["category_motorbike", "category_name", "product_sku",
                                                     "product_title", "product_description", "product_image"])
 
@@ -97,7 +97,7 @@ class MotorbikeScraper:
         stop_time = time.time()
         print("Process stopped at ", time.ctime(stop_time))
         total_time = stop_time - start_time
-        print("Lasted ", int(total_time/3600), "h", int(total_time/60), "m")
+        print("Lasted ", int(total_time/60), "minutes")
         print(self.data)
 
     def data2csv(self, filename):
