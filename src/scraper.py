@@ -2,6 +2,7 @@ import urllib3
 import time
 from bs4 import BeautifulSoup
 import pandas as pd
+import os
 
 
 class MotorbikeScraper:
@@ -12,7 +13,7 @@ class MotorbikeScraper:
         """
         self.url = "https://valtermotostore.com"
         self.subdomain = "/catalog/seo_sitemap/category/?p=1"
-        self.data = []
+        self.data = pd.DataFrame()
 
     @staticmethod
     def __download_html(url):
@@ -107,4 +108,9 @@ class MotorbikeScraper:
         :param filename: name of the file to write in
         """
         root = '../csv'
-        self.data.to_csv(root + '/' + filename, index_label='row')
+        if not os.path.exists(root):
+            os.mkdir(root)
+
+        fullname = os.path.join(root, filename)
+
+        self.data.to_csv(fullname, index_label='row')
