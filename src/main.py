@@ -1,6 +1,6 @@
 from scraper import MotorbikeScraper
 
-output_file = "dataset.csv"
+output_file = "motorbike_accessories.csv"
 
 scraper = MotorbikeScraper()
 scraper.scrape_products()

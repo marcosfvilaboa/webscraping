@@ -86,13 +86,15 @@ class MotorbikeScraper:
                     product_title = p.find(class_="product-name").text
                     product_sku = p.find(id="sku").text
                     product_description = p.find(class_="desc").text
+                    product_price = p.find(class_="price").text
                     product_image = p.find("img")['src']
                     products.append((category_motorbike, category_name, product_sku, product_title, product_description,
-                                     product_image))
+                                     product_price, product_image))
 
         print("HTML downloading finished!")
         self.data = pd.DataFrame(products, columns=["category_motorbike", "category_name", "product_sku",
-                                                    "product_title", "product_description", "product_image"])
+                                                    "product_title", "product_description", "product_price",
+                                                    "product_image"])
 
         # Stop timer
         stop_time = time.time()
