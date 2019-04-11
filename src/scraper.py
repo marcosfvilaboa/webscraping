@@ -1,9 +1,10 @@
-import urllib3
-import time
+from urllib import robotparser
 from bs4 import BeautifulSoup
 import pandas as pd
 import os
-
+import atexit
+import urllib3
+import time
 
 class MotorbikeScraper:
 
@@ -25,9 +26,32 @@ class MotorbikeScraper:
         """
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         http = urllib3.PoolManager(maxsize=10)
-        response = http.request('GET', url)
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, sdch, br",
+            "Accept-Language": "en-US,en;q=0.8",
+            "Cache-Control": "no-cache",
+            "dnt": "1",
+            "Pragma": "no-cache",
+            "Upgrade-Insecure-Requests": "1",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_3) AppleWebKit/5 37.36 (KHTML, like Gecko) "
+                          "Chrome/56.0.2924.87 Safari/537.36"
+        }
+        response = http.request('GET', url, headers=headers)
         soup = BeautifulSoup(response.data, "html.parser")
         return soup
+
+    @staticmethod
+    def parse_robots_txt(url):
+        rp = robotparser.RobotFileParser()
+        rp.set_url(url + '/robots.txt')
+        rp.read()
+        user_agent = '*'
+        if rp.can_fetch(user_agent, url) is False:
+            print("User-agent isn't allowed by robots.txt")
+            atexit()
+        else:
+            print("User-agent is allowed by robots,txt")
 
     def scrape_categories(self):
         """
@@ -66,6 +90,9 @@ class MotorbikeScraper:
         start_time = time.time()
         print("Starting process at ", time.ctime(start_time))
 
+        # parse robots.txt to find if user-agent = * can fetch
+        self.parse_robots_txt(self.url)
+
         # Download categories
         print("Downloading categories...")
         categories = self.scrape_categories()
@@ -84,6 +111,11 @@ class MotorbikeScraper:
             if product_list is not None:
                 for p in product_list.findAll("li", class_="item", recursive=False):
                     product_title = p.find(class_="product-name").text
+
+                    if product_title is 'Nylon TRACK frame protectors':
+                        break
+                    print("Catching...", product_title)
+
                     product_sku = p.find(id="sku").text
                     product_description = p.find(class_="desc").text
                     product_price = p.find(class_="price").text
@@ -100,7 +132,7 @@ class MotorbikeScraper:
         stop_time = time.time()
         print("Process stopped at ", time.ctime(stop_time))
         total_time = stop_time - start_time
-        print("Lasted ", int(total_time/60), "minutes")
+        print("Lasted ", int(total_time / 60), "minutes")
         print(self.data)
 
     def data2csv(self, filename):
