@@ -15,6 +15,7 @@ class MotorbikeScraper:
         self.url = "https://valtermotostore.com"
         self.subdomain = "/catalog/seo_sitemap/category/?p=1"
         self.data = pd.DataFrame()
+        self.delay = 0
 
     @staticmethod
     def __download_html(url):
@@ -41,17 +42,19 @@ class MotorbikeScraper:
         soup = BeautifulSoup(response.data, "html.parser")
         return soup
 
-    @staticmethod
-    def parse_robots_txt(url):
+    # @staticmethod
+    def parse_robots_txt(self):
         rp = robotparser.RobotFileParser()
-        rp.set_url(url + '/robots.txt')
+        rp.set_url(self.url + '/robots.txt')
         rp.read()
         user_agent = '*'
-        if rp.can_fetch(user_agent, url) is False:
+        self.delay = rp.crawl_delay("*")
+        if rp.can_fetch(user_agent, self.url) is False:
             print("User-agent isn't allowed by robots.txt")
             atexit()
         else:
-            print("User-agent is allowed by robots,txt")
+            print("User-agent is allowed by robots.txt")
+
 
     def scrape_categories(self):
         """
@@ -71,6 +74,9 @@ class MotorbikeScraper:
                     category_name = category_object.text
                     category_link = category_object['href']
                     categories.append((category_motorbike, category_name, category_link))
+
+                    time.sleep(self.delay)
+
             next_page_object = html.find("a", class_="next i-next")
             if next_page_object is not None:
                 html = self.__download_html(next_page_object['href'])
@@ -91,7 +97,7 @@ class MotorbikeScraper:
         print("Starting process at ", time.ctime(start_time))
 
         # parse robots.txt to find if user-agent = * can fetch
-        self.parse_robots_txt(self.url)
+        self.parse_robots_txt()
 
         # Download categories
         print("Downloading categories...")
@@ -99,7 +105,7 @@ class MotorbikeScraper:
 
         print(categories.__len__(), " categories saved!")
         print("Downloading HTML of every category")
-        print("This process could take 1 hour...")
+        print("This process could take several hours...")
         products = []
         # Scrap url of every category
         for index, c in categories.iterrows():
@@ -111,21 +117,19 @@ class MotorbikeScraper:
             if product_list is not None:
                 for p in product_list.findAll("li", class_="item", recursive=False):
                     product_title = p.find(class_="product-name").text
-
-                    if product_title is 'Nylon TRACK frame protectors':
-                        break
-                    print("Catching...", product_title)
-
-                    product_sku = p.find(id="sku").text
+                    product_sku = p.find(id="sku").text.replace("Code: ","")
                     product_description = p.find(class_="desc").text
                     product_price = p.find(class_="price").text
                     product_image = p.find("img")['src']
-                    products.append((category_motorbike, category_name, product_sku, product_title, product_description,
-                                     product_price, product_image))
+                    products.append((category_motorbike, category_name, product_sku, product_title, product_price,
+                                     product_description, product_image))
+
+                    time.sleep(self.delay)
+
 
         print("HTML downloading finished!")
         self.data = pd.DataFrame(products, columns=["category_motorbike", "category_name", "product_sku",
-                                                    "product_title", "product_description", "product_price",
+                                                    "product_title", "product_price", "product_description",
                                                     "product_image"])
 
         # Stop timer
