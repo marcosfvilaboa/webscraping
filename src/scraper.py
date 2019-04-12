@@ -119,7 +119,6 @@ class MotorbikeScraper:
                 for p in product_list.findAll("li", class_="item", recursive=False):
                     product_title = p.find(class_="product-name").text
                     product_sku = p.find(id="sku").text.replace("Code: ", "")
-                    # product_description = p.find(class_="desc").text.replace("\n", "")
                     product_price = p.find(class_="price").text.replace("€", "")
                     product_image = p.find("img")['src']
                     products.append((category_motorbike, category_name, product_sku, product_title, product_price,
