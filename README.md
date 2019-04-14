@@ -12,4 +12,4 @@ This exercise was made by Joaquín Salomon Sabaté & Marcos F. Vilaboa
 
 * src/main.py: Main file to run the application. It contains the callers to the needed Class methods.
 * src/scraper.py: It contains the Class _MotorbikeScraper_ implementation and its methods. 
-* csv/dataset.csv: Contains the result dataset in CSV format from the scrape.
+* csv/motorbike_accessories.csv: Contains the result dataset in CSV format from the scrape.
