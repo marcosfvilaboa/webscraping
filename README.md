@@ -6,7 +6,7 @@ This assessment has been made under the context of the Master in Data Science "T
 
 ### Team members
 
-This exercise was made by Joaquim Salomon & Marcos F. Vilaboa
+This exercise was made by Joaquín Salomon Sabaté & Marcos F. Vilaboa
 
 ### Source code files
 
